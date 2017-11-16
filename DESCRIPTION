@@ -1,0 +1,18 @@
+Package: PepTools
+Type: Package
+Title: PepTools - An R-package for making immunoinformatics accessible
+Version: 0.1.0
+Authors@R: person("Leon Eyrich", "Jessen", email = "leon.jessen@gmail.com",
+                  role = c("aut", "cre"))
+Maintainer: Leon Eyrich Jessen <leon.jessen@gmail.com>
+Description: The package is intended to be used for working with peptide data
+    Various tools for generating, manipulating, visualising and analysing
+    peptides and derived data
+Depends:
+    tidyverse,
+    ggseqlogo
+License: GPL-3 | file LICENSE
+Encoding: UTF-8
+LazyData: true
+URL: https://github.com/leonjessen/PepTools
+BugReports: https://github.com/leonjessen/PepTools/issues
