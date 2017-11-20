@@ -19,26 +19,6 @@
 
 
 # ------------------------------------------------------------------------------
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Cmd + Shift + B'
-#   Check Package:             'Cmd + Shift + E'
-#   Test Package:              'Cmd + Shift + T'
-# ------------------------------------------------------------------------------
-
-
-
-# Load libraries
-# ------------------------------------------------------------------------------
-library('tidyverse')
-library('ggseqlogo')
-
-
-
-# Define functions
-# ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
 # COMPLETED FUNCTIONS
 # ------------------------------------------------------------------------------
 # Convert a vector of peptides to matrix form
@@ -58,8 +38,7 @@ pep_ran = function(n = 10, k = 9){
   # A bit tricky to avoid looping over millions of peptides
 
   # Define the standard 20 amino acid residue characters
-  res_chars = c("A","R","N","D","C","Q","E","G","H","I",
-                "L","K","M","F","P","S","T","W","Y","V")
+  res_chars = AMINOACIDS$one
 
   # First we generate one long vector with all the samples residues
   smpl_chars = res_chars %>% sample(size = n*k, replace = TRUE)
@@ -211,22 +190,7 @@ residue_name = function(res, to = 'one'){
   }
 
   # Hardcode tibble of amino acid residue names
-  res_name_dat =
-    tibble(full  = c('Alanine'   , 'Arginine'     , 'Asparagine', 'Aspartate',
-                     'Cysteine'  , 'Glutamate'    , 'Glutamine' , 'Glycine'  ,
-                     'Histidine' , 'Isoleucine'   , 'Leucine'   , 'Lysine'   ,
-                     'Methionine', 'Phenylalanine', 'Proline'   , 'Serine'   ,
-                     'Threonine' , 'Tryptophan'   , 'Tyrosine'  , 'Valine'   ),
-           three = c('Ala', 'Arg', 'Asn', 'Asp',
-                     'Cys', 'Glu', 'Gln', 'Gly',
-                     'His', 'Ile', 'Leu', 'Lys',
-                     'Met', 'Phe', 'Pro', 'Ser',
-                     'Thr', 'Trp', 'Tyr', 'Val'),
-           one   = c('A', 'R', 'N', 'D',
-                     'C', 'E', 'Q', 'G',
-                     'H', 'I', 'L', 'K',
-                     'M', 'F', 'P', 'S',
-                     'T', 'W', 'Y', 'V'))
+  res_name_dat = AMINOACIDS
 
   # Check valid amino acid residue name in input
   if( !(all(res %in% res_name_dat$one) |
@@ -251,12 +215,15 @@ residue_name = function(res, to = 'one'){
 
 }
 # Create empty matrix with corresponding row and column names
-empty_mat = function(npos = 9, res_chars = 'ARNDCQEGHILKMFPSTWYVX-'){
-  res_chars       = res_chars %>% str_split('') %>% unlist
-  e_mat           = matrix(data = 0, nrow = npos, ncol = length(res_chars))
-  rownames(e_mat) = seq(1,nrow(e_mat))
-  colnames(e_mat) = res_chars
-  return(e_mat)
+pssm_empty = function(npos = 9, res_chars = 'ARNDCQEGHILKMFPSTWYV', special_chars = FALSE){
+  if( special_chars ){
+    res_chars = paste0(res_chars, 'X-')
+  }
+  res_chars      = res_chars %>% str_split('') %>% unlist
+  pssm           = matrix(data = 0, nrow = npos, ncol = length(res_chars))
+  rownames(pssm) = seq(1, npos)
+  colnames(pssm) = res_chars
+  return(pssm)
 }
 # Scale a matrix, such that all values v lies in [0;1]
 mat_zo_scale = function(x, na_rm = FALSE){
@@ -279,29 +246,13 @@ pep_clean = function(pep){
   return( pep %>% toupper %>%
             str_replace_all(pattern = "[^ARNDCQEGHILKMFPSTWYVX-]", replacement = "X") )
 }
-# Download the blosum62 matrix from NCBI
-# https://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt
-get_blosum62 = function(){
-  ncbi_url = "https://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt"
-  blosum62 = ncbi_url %>% read.table
-  blosum62 = blosum62[1:20,1:20] %>% as.matrix
-  return(blosum62)
-}
 # Encode a vector of peptides using the BLOSUM62 matrix.
 # Effectively each peptide become a 2D image and final
 # encoding a 3D tensor
 pep_encode = function(pep){
 
   # Check input vector
-  if( !is.character(pep) | !is.vector(pep) ){
-    stop("'pep' must be a character vector of peptides")
-  }
-  if( pep %>% nchar %>% unique %>% length > 1 ){
-    stop("All peptides in 'pep' must have equal length")
-  }
-  if( pep %>% str_detect("[^ARNDCQEGHILKMFPSTWYV]") %>% any ){
-    stop("Peptides in 'pep' may only consist of 'ARNDCQEGHILKMFPSTWYV'")
-  }
+  pep_check(pep = pep)
 
   # First we retrive the BLOSUM62 matrix from data() and scale,
   # such that all values fall in the range 0 to 1
@@ -310,6 +261,7 @@ pep_encode = function(pep){
   # Then we convert the vector of peptides to a matrix
   # with dimensions 'm x n' = n_peps x length_peps'
   p_mat = pep %>% pep_mat
+
   # Assign meaningful variable names to dimensions
   n_peps = length(pep)    # i'th row
   l_peps = nchar(pep[1])  # j'th column
@@ -323,6 +275,48 @@ pep_encode = function(pep){
     o_tensor[i,,]  = blosum62[pep_i_residues,]
   }
   return(o_tensor)
+}
+# Set a data tibble with names and abbreviations of the standard 20
+# proteogenic amino acid residues
+.set_aminoacids = function(){
+  AMINOACIDS = matrix(c("Alanine","Ala","A","Arginine","Arg","R",
+                        "Asparagine","Asn","N","Aspartate","Asp","D",
+                        "Cysteine","Cys","C","Glutamine","Gln","Q",
+                        "Glutamate","Glu","E","Glycine","Gly","G",
+                        "Histidine","His","H","Isoleucine","Ile","I",
+                        "Leucine","Leu","L","Lysine","Lys","K",
+                        "Methionine","Met","M","Phenylalanine","Phe","F",
+                        "Proline","Pro","P","Serine","Ser","S",
+                        "Threonine","Thr","T","Tryptophan","Trp","W",
+                        "Tyrosine","Tyr","Y","Valine","Val","V"),
+                      ncol = 3, byrow = TRUE)
+  colnames(AMINOACIDS) = c("full", "three", "one")
+  AMINOACIDS = AMINOACIDS %>% as_tibble
+  save(AMINOACIDS, file = "data/AMINOACIDS.RData")
+  return(0)
+}
+.set_peptides = function(){
+  set.seed(509279)
+  p_file = paste0("https://raw.githubusercontent.com/leonjessen/",
+                  "keras_tensorflow_demo/master/data/",
+                  "ran_peps_netMHCpan40_predicted_A0201_reduced_cleaned_balanced.tsv")
+  PEPTIDES = read_tsv(file = p_file)
+  PEPTIDES = PEPTIDES %>%
+    filter(label_chr=="SB") %>%
+    sample_n(size = 5000) %>%
+    pull(peptide)
+  save(PEPTIDES, file = "data/PEPTIDES.RData")
+  return(0)
+}
+# Download the blosum62 matrix from NCBI
+# https://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt
+# and save it into data/BLOSUM62.RData
+.get_blosum62 = function(){
+  ncbi_url = "https://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt"
+  BLOSUM62 = ncbi_url %>% read.table
+  BLOSUM62 = BLOSUM62[1:20,1:20] %>% as.matrix
+  save(BLOSUM62, file = "data/BLOSUM62.RData")
+  return(0)
 }
 
 # ------------------------------------------------------------------------------
@@ -370,28 +364,20 @@ pep_encode = function(pep){
 
 # 4.2.1 Entropy
 # Eq. 4.7, p70
-.shannon_entropy = function(x){
-  pep_mat = pep_mat(x = x)
-  out_mat = empty_mat(npos = ncol(pep_mat))
-  for( i in 1:nrow(out_mat) ){
-    p_i = pep_mat[,i]
-    for( j in 1:ncol(out_mat) ){
-      res  = colnames(out_mat)[j]
-      prob = mean(p_i==res)
-      if( prob > 0 ){
-        out_mat[i,j] = -1 * prob * log2(prob) # H(p)
-      }
-    }
-  }
-  return(out_mat)
+shannon_entropy = function(pep){
+  pep_check(pep)
+  f_mat = res_freqs(pep = pep)
+  s_mat = -1 * f_mat * log2(f_mat)
+  return(s_mat)
 }
 
 # As 4.2.1 but summed per position
-.shannon_entropy_pos = function(x){
-  shannon_mat = shannon_entropy(x)
-  shannon_vec = apply(shannon_mat,1,function(p_i){ sum(p_i) })
-  names(shannon_vec) = paste0('p',1:length(shannon_vec))
-  return(shannon_vec)
+shannon_entropy_pos = function(pep){
+  pep_check(pep)
+  s_mat = shannon_entropy(pep)
+  s_vec = rowSums(s_mat)
+  names(s_vec) = rownames(s_mat)
+  return(s_vec)
 }
 
 # 4.2.2 Relative Entropy
@@ -403,7 +389,7 @@ pep_encode = function(pep){
               'S'=7.14,'T'=5.53,'V'=6.73,'W'=1.25,'Y'=2.91,
               'X'=4.55,'-'=4.55) / 100
   pep_mat = pep_mat(x = x)
-  out_mat = empty_mat(npos = ncol(pep_mat))
+  out_mat = pssm_empty(npos = ncol(pep_mat))
   for( i in 1:nrow(out_mat) ){
     p_i = pep_mat[,i]
     for( j in 1:ncol(out_mat) ){
@@ -430,7 +416,7 @@ pep_encode = function(pep){
 # Eq. 4.8, p71
 .information_content = function(x){
   pep_mat = pep_mat(x = x)
-  out_mat = empty_mat(npos = ncol(pep_mat))
+  out_mat = pssm_empty(npos = ncol(pep_mat))
   for( i in 1:nrow(out_mat) ){
     p_i = pep_mat[,i]
     for( j in 1:ncol(out_mat) ){
@@ -453,32 +439,19 @@ pep_encode = function(pep){
 }
 
 # From a list of peptides, calculate the corresponding frequency matrix
-.frequencies = function(x){
-  pep_mat = pep_mat(x = x)
-  out_mat = empty_mat(npos = ncol(pep_mat))
-  for( i in 1:nrow(out_mat) ){
-    p_i = pep_mat[,i]
-    for( j in 1:ncol(out_mat) ){
-      res  = colnames(out_mat)[j]
-      prob = mean( p_i == res )
-      if( prob > 0 ){
-        out_mat[i,j] = prob
-      }
-    }
-  }
-  return(out_mat)
+res_freqs = function(pep){
+  pep_check(pep)
+  c_mat = res_counts(pep = pep)
+  f_mat = c_mat / rowSums(c_mat)
+  return(f_mat)
 }
 
 # From a list of peptides, calculate the corresponding counts matrix
-.counts = function(x){
-  pep_mat = pep_mat(x = x)
-  out_mat = empty_mat(npos = ncol(pep_mat))
-  for( i in 1:nrow(out_mat) ){
-    p_i = pep_mat[,i]
-    for( j in 1:ncol(out_mat) ){
-      res  = colnames(out_mat)[j]
-      out_mat[i,j] = sum( p_i == res )
-    }
+res_counts = function(pep){
+  p_mat = pep_mat(pep)
+  c_mat = pssm_empty(npos = ncol(p_mat))
+  for( res in colnames(c_mat) ){
+    c_mat[,res] = colSums(p_mat == res)
   }
-  return(out_mat)
+  return(c_mat)
 }
