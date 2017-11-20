@@ -75,4 +75,4 @@ Using the `ggseqlogo` package, we can visualise the strong binder peptides in a 
 PEPTIDES %>% ggseqlogo()
 ```
 
-![](README-peps_logo-1.png)
+![](README-peps_logo-1.png) ![](README-peps_logo-1.png)
