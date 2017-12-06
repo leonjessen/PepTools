@@ -1,0 +1,74 @@
+---
+title: "PepTools - An R"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# PepTools
+
+The aim of this package is to supply a set of tools, which will ease working with peptide data within the field of immunoinformatics.
+
+## Getting started
+
+Using Hadley Wickham's brilliant `devtools` package, we can easily install `PepTools` like so:
+```{r eval=FALSE}
+install.packages("devtools")
+devtools::install_github("leonjessen/PepTools")
+```
+
+Once the package has been installed, we can simply load it like so:
+```{r load_libraries, message=FALSE}
+library("PepTools")
+```
+
+## PSSM Examples
+
+`PepTools` comes with an example data set of 5,000 9-mer peptides, which have been predicted by [NetMHCpan 4.0 Server](http://www.cbs.dtu.dk/services/NetMHCpan-4.0/) to be strong binders to HLA-A*02:01.
+
+We can view the first 10 peptides like so
+```{r view_test_peps}
+PEPTIDES %>% head(10)
+```
+
+and derive the count matrix:
+```{r pssm_counts}
+PEPTIDES %>% pssm_counts %>% .[1:9,1:10]
+```
+
+and the frequency matrix:
+```{r pssm_freqs}
+PEPTIDES %>% pssm_freqs %>% .[1:9,1:10]
+```
+
+and the bits of information matrix;
+```{r pssm_bits}
+PEPTIDES %>% pssm_freqs %>% pssm_bits %>% .[1:9,1:10]
+```
+
+## Sequence Logo Examples
+
+Using the `ggseqlogo` package, we can visualise the bits matrix:
+```{r man_peps_logo, fig.width=5, fig.height=3, fig.align='center'}
+PEPTIDES %>% pssm_freqs %>% pssm_bits %>% t %>% ggseqlogo(method="custom")
+```
+
+and compare with the `ggseqlogo` build in peptide-to-bits conversion:
+```{r auto_peps_logo, fig.width=5, fig.height=3, fig.align='center'}
+PEPTIDES %>% ggseqlogo
+```
+
+## Peptide Encoding for Deep Learning
+
+`PepTools` also contain function for encoding peptides:
+ 
+```{r pep_encode}
+PEPTIDES %>% pep_encode %>% dim
+```
+
+As can be seen from the dimensions, `pep_encode` creates a 3D array or a tensor with 5,000 rows, 9 columns and 20 slices, corresponding to `n_peptides x l_peptide x l_enc`, where the encoding is the `BLOSUM62` matrix. This way each peptide is encoded as an'image', which can then be used as input to a Deep Learning model. To get a better understanding of what is going on, we can plot the 3 first encoded peptide 'images':
+```{r plot_peptide_images, fig.width=5, fig.height=10, fig.align='center'}
+PEPTIDES %>% pep_plot_images
+```
