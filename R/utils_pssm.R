@@ -50,7 +50,7 @@ pssm_bits = function(PSSM){
   }
 
   # Compute the postional relative Entropy (information content)
-  ic = log2(20) + rowSums( PSSM * log2(PSSM) )
+  ic = log2(20) + rowSums( PSSM * log2(PSSM) , na.rm = TRUE)
 
   # Compute bits of information for all PSSM[i,j]
   bits = PSSM * ic
@@ -91,7 +91,7 @@ pssm_flatten = function(PSSM){
 # From a list of peptides, calculate the corresponding frequency matrix
 pssm_freqs = function(pep){
   pep_check(pep)
-  c_mat = res_counts(pep = pep)
+  c_mat = pssm_counts(pep = pep)
   f_mat = c_mat / rowSums(c_mat)
   return(f_mat)
 }
