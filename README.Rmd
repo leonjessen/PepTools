@@ -1,5 +1,5 @@
 ---
-title: "PepTools - An R"
+title: "PepTools - An Immunoinformatics (Immunological Bioinformatics) R-package for working with peptide data"
 output: github_document
 ---
 

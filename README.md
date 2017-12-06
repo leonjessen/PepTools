@@ -1,4 +1,4 @@
-PepTools - An R
+PepTools - An Immunoinformatics (Immunological Bioinformatics) R-package for working with peptide data
 ================
 
 PepTools
@@ -108,7 +108,7 @@ PEPTIDES %>% pssm_freqs %>% pssm_bits %>% t %>% ggseqlogo(method="custom")
 
 <img src="README_files/figure-markdown_github/man_peps_logo-1.png" style="display: block; margin: auto;" />
 
-and compare with the build in peptide-to-bits conversion:
+and compare with the `ggseqlogo` build in peptide-to-bits conversion:
 
 ``` r
 PEPTIDES %>% ggseqlogo
