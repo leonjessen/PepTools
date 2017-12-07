@@ -58,3 +58,28 @@
   save(BLOSUM62, file = "data/BLOSUM62.RData")
   return(0)
 }
+# Get the background frequencies
+# Background distribution frequencies for Kullback-Leibler calculation is from:
+#     Proteome-pI: proteome isoelectric point database
+#     Lukasz P. Kozlowski
+#     Nucleic Acids Research, Volume 45, Issue D1, 4 January 2017, Pages D1112–
+#     D1116, https://doi.org/10.1093/nar/gkw978
+#     Table 2. Amino acid frequency for the kingdoms of life in the Proteome-pI database
+#     Ala 	Cys 	Asp 	Glu 	Phe 	Gly 	His 	Ile 	Lys 	Leu 	Met 	Asn
+#     A     C     D     E     F     G     H     I     K     L     M     N
+#     8.76 	1.38 	5.49 	6.32 	3.87 	7.03 	2.26 	5.49 	5.19 	9.68 	2.32 	3.93
+#     Pro 	Gln 	Arg 	Ser 	Thr 	Val 	Trp 	Tyr   NA    NA
+#     P     Q     R     S     T     V     W     Y     X     -
+#     5.02 	3.90 	5.78 	7.14 	5.53 	6.73 	1.25 	2.91  4.55  4.55
+#     'X' and '-' are set to 1/22*100 (i.e. flat bg)
+# Table 2 large:
+# https://academic.oup.com/view-large/51205195/Proteome-pI%3A%20proteome%20isoelectric%20point%20database
+.get_bgfreqs = function(){
+  BGFREQS = read_tsv(file = 'data/bgfreqs.txt', comment = '#')
+  BGFREQS = BGFREQS %>% filter(Kingdom == 'All') %>%
+    select(2:21) %>% as.matrix %>% .[1,]
+  names(BGFREQS) = BGFREQS %>% names %>% residue_name
+  BGFREQS = BGFREQS[AMINOACIDS$one] / 100
+  save(BGFREQS, file = "data/BGFREQS.RData")
+  return(0)
+}

@@ -15,11 +15,26 @@
 # You should have received a copy of the GNU General Public License            #
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.       #
 ################################################################################
-# Check if a PSSM has the correct format, according to criteria:
-#  - Is a matrix
-#  - Is numeric
-#  - Has 20, 21 or 22 columns
-#  - Column names only contain allowed amino acid residues 'ARNDCQEGHILKMFPSTWYVX-'
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Check if a PSSM has the correct format
+#'
+#' Check format according to criteria: i. Is a matrix, ii. Is numeric,
+#' iii. Has 20, 21 or 22 columns, iv. Column names only contain allowed
+#' amino acid residues '\code{ARNDCQEGHILKMFPSTWYV}'
+#'
+#' @param PSSM A Position Specific Scoring Matrix
+#' @return \code{TRUE} if checks are passed, otherwise \code{stop()} is called with a message
+#' @examples
+#' pssm = pssm_empty()
+#' pssm[1:9,1:20] = rnorm(180)
+#' pssm_check(PSSM = pssm)
 pssm_check = function(PSSM){
   if( !is.matrix(PSSM) | !is.numeric(PSSM) ){
     stop("PSSM must be a numeric matrix")
@@ -33,10 +48,82 @@ pssm_check = function(PSSM){
     stop("Invalid column names in PSSM. Only 'ARNDCQEGHILKMFPSTWYVX-' allowed")
   }
   return(TRUE)
+}
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Compute the Kullback-Leibler Divergence
+#'
+#' From a matrix of amino acid frequencies, where the peptide positions are the
+#' rows and where the amino acids are the columns and the sum of the
+#' rows all are equal to one, calculate the compute the Kullback-Leibler
+#' Divergence for each \code{[p_i,res_j]}
+#'
+#' @param PSSM A Position Specific Scoring Matrix of amino acid frequencies
+#' @return A PSSM of computed Kullback-Leibler Divergences for each \code{[p_i,res_j]}
+#' @examples
+#' pep_ran(n = 100, k = 9) %>% pssm_freqs %>% pssm_kld
+pssm_kld = function(PSSM){
+
+  # Check that the input PSSM is a numeric matrix
+  if( !is.matrix(PSSM) | !is.numeric(PSSM) ){
+    stop("PSSM must be a numeric matrix")
   }
-# From a matrix of frequencies, where the peptide positions are the rows and
-# where the amino acid residues are the columns and the sum of the rows all
-# are equal to one, calculate the weighted bits of information
+
+  # Check that the input PSSM is a frequency matrix
+  if( !all(PSSM %>% rowSums() %>% round(2) == 1) ){
+    stop("PSSM must be a frequency matrix, where all row sums are 1")
+  }
+
+  # Compute the postional relative Entropy (information content)
+  kld_mat = pssm_empty()
+  for( i in 1:nrow(PSSM) ){
+    for( j in 1:ncol(PSSM) ){
+      res = colnames(PSSM)[j]
+      p   = PSSM[i,j]
+      q   = BGFREQS[res]
+      kld_mat[i,j] = p * log2( p / q )
+    }
+  }
+  ic_kld = rowSums( kld_mat )
+
+  # Compute bits of information for all PSSM[i,j]
+  bits_kld = PSSM * ic_kld
+
+  # Done, return!
+  #return(bits_kld)
+  return(kld_mat)
+}
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Compute the information content in bits
+#'
+#' From a matrix of amino acid frequencies, where the peptide positions are the
+#' rows and where the amino acids are the columns and the sum of the
+#' rows all are equal to one, calculate the compute the bits of information
+#' for each \code{[p_i,res_j]}
+#'
+#' @param PSSM A Position Specific Scoring Matrix of amino acid frequencies
+#' @return A PSSM of computed bits of information for each \code{[p_i,res_j]}
+#' @examples
+#' pep_ran(n = 100, k = 9) %>% pssm_freqs %>% pssm_bits
 pssm_bits = function(PSSM){
 
   # Check that the input PSSM is a numeric matrix
@@ -63,7 +150,27 @@ pssm_bits = function(PSSM){
   # Done, return!
   return(bits)
 }
-# Create empty matrix with corresponding row and column names
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Create empty Position Specific Scoring Matrix
+#'
+#' Create an empty Position Specific Scoring Matrix with \code{npos} number of
+#' rows and 20 columns sorted according to \code{ARNDCQEGHILKMFPSTWYV}
+#'
+#' @param npos The number of positions
+#' @return A numeric matrix with '0' entries with dimensions \code{npos} rows
+#' and 20 columns
+#' @examples
+#' pssm_empty()
 pssm_empty = function(npos = 9){
   res_chars      = AMINOACIDS$one
   pssm           = matrix(data = 0, nrow = npos, ncol = length(res_chars))
@@ -71,7 +178,27 @@ pssm_empty = function(npos = 9){
   colnames(pssm) = res_chars
   return(pssm)
 }
-# Create empty matrix with corresponding row and column names
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Create empty Position Specific Scoring Matrix
+#'
+#' Create an empty Position Specific Scoring Matrix with \code{npos} number of
+#' rows and 22 columns sorted according to \code{ARNDCQEGHILKMFPSTWYVX-}
+#'
+#' @param npos The number of positions
+#' @return A numeric matrix with '0' entries with dimensions \code{npos} rows
+#' and 22 columns
+#' @examples
+#' pssm_empty_long()
 pssm_empty_long = function(npos = 9){
   res_chars      = c(AMINOACIDS$one,'X','-')
   pssm           = matrix(data = 0, nrow = npos, ncol = length(res_chars))
@@ -79,8 +206,27 @@ pssm_empty_long = function(npos = 9){
   colnames(pssm) = res_chars
   return(pssm)
 }
-# Flatten PSSM to a single row, such that 9 x 20 => 1 x 180
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' 'Flatten' PSSM to a single row
+#'
+#' 'Flatten' PSSM to a single row, such that e.g. m x n = 9 x 20 becomes 1 x 180
+#'
+#' @param PSSM A Position Specific Scoring Matrix with \code{m}
+#' @return A numeric matrix with 1 row and m * n columns
+#' @examples
+#' pssm_empty() %>% pssm_flatten
 pssm_flatten = function(PSSM){
+  pssm_check(PSSM)
   out_col_names = sapply(1:ncol(PSSM),function(i){
     paste(rownames(PSSM),colnames(PSSM)[i],sep="_")
   }) %>% t %>% matrix(nrow=1)
@@ -88,13 +234,51 @@ pssm_flatten = function(PSSM){
   colnames(out) = out_col_names
   return(out)
 }
-# From a list of peptides, calculate the corresponding frequency matrix
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Compute frequency matrix
+#'
+#' From a vector of equal length peptides, calculate the corresponding frequency matrix
+#'
+#' @param pep A character vector of equal length peptides
+#' @return A numeric matrix with \code{length(pep)} rows and 20 columns
+#' @examples
+#' pep_ran(n = 100, k = 9) %>% pssm_freqs
 pssm_freqs = function(pep){
   pep_check(pep)
   c_mat = pssm_counts(pep = pep)
   f_mat = c_mat / rowSums(c_mat)
   return(f_mat)
 }
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Compute counts matrix
+#'
+#' From a vector of equal length peptides, calculate the counts matrix
+#'
+#' @param pep A character vector of equal length peptides
+#' @return A numeric matrix with \code{length(pep)} rows and 20 columns
+#' @examples
+#' pep_ran(n = 100, k = 9) %>% pssm_freqs
+
 # From a list of peptides, calculate the corresponding counts matrix
 pssm_counts = function(pep){
   p_mat = pep_mat(pep)
@@ -104,6 +288,14 @@ pssm_counts = function(pep){
   }
   return(c_mat)
 }
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
 # ------------------------------------------------------------------------------
 # WORK IN PROGRESS
 # ------------------------------------------------------------------------------
@@ -133,19 +325,6 @@ pssm_counts = function(pep){
 #     Chapter 4: Methods Applied in Immunological Bioinformatics
 #     Section 4.2: Information Carried by Immunogenic Sequences
 #
-# Background distribution frequencies for Kullback-Leibler calculation is from:
-#     Proteome-pI: proteome isoelectric point database
-#     Lukasz P. Kozlowski
-#     Nucleic Acids Research, Volume 45, Issue D1, 4 January 2017, Pages D1112–
-#     D1116, https://doi.org/10.1093/nar/gkw978
-#     Table 2. Amino acid frequency for the kingdoms of life in the Proteome-pI database
-#     Ala 	Cys 	Asp 	Glu 	Phe 	Gly 	His 	Ile 	Lys 	Leu 	Met 	Asn
-#     A     C     D     E     F     G     H     I     K     L     M     N
-#     8.76 	1.38 	5.49 	6.32 	3.87 	7.03 	2.26 	5.49 	5.19 	9.68 	2.32 	3.93
-#     Pro 	Gln 	Arg 	Ser 	Thr 	Val 	Trp 	Tyr   NA    NA
-#     P     Q     R     S     T     V     W     Y     X     -
-#     5.02 	3.90 	5.78 	7.14 	5.53 	6.73 	1.25 	2.91  4.55  4.55
-#     'X' and '-' are set to 1/22*100 (i.e. flat bg)
 
 # 4.2.1 Entropy
 # Eq. 4.7, p70
