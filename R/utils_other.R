@@ -69,3 +69,61 @@ vec_mima_scale = function(x, na_rm = FALSE){
 ################################################################################
 
 
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Read a FASTA file
+#'
+#' read_fasta reads a FASTA file of nucleotides or amino acids file and returns
+#' a tibble with number of rows corresponding to the number of sequences and two
+#' variables: 'fasta_header' and 'sequences'
+#' @param file The FASTA file to be read either local or URL
+#' @examples
+#' read_fasta(file = 'my_fasta_file.fsa')
+#' read_fasta(file = 'https://www.ncbi.nlm.nih.gov/WebSub/html/help/sample_files/nucleotide-sample.txt')
+read_fasta = function(file){
+
+  # Check input
+  if( !is_character(file) ){
+    stop("'file' has to be a string specifying a file name")
+  }
+  #if( !file.exists(file) ){
+  #  stop(paste("Unable to read file",file))
+  #}
+
+  # Read lines from file
+  lines = file %>% read_lines
+
+  # Remove any comments
+  keep  = lines %>% str_detect('#') %>% !.
+  lines = lines[keep]
+  rm(keep)
+
+  # Set variables
+  n_seqs    = lines %>% str_detect("^>") %>% sum
+  headers   = rep(NA, n_seqs)
+  sequences = rep('', n_seqs)
+
+  # Iterate over lines and fill containers
+  entry_no = 1
+  for( line in lines ){
+    if( line %>% str_detect("^>") ){
+      headers[entry_no] = line
+      entry_no = entry_no + 1
+    } else {
+      sequences[entry_no-1] = paste0(sequences[entry_no-1], line)
+    }
+  }
+
+  # Delete lines
+  rm(lines)
+
+  # Return output tibble
+  return(tibble(fasta_header = headers, sequence = sequences))
+}
+################################################################################
+################################################################################
+################################################################################
