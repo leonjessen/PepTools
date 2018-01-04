@@ -1,0 +1,17 @@
+## Sample .travis.yml file for use with metacran/r-builder
+## See https://github.com/metacran/r-builder for details.
+
+language: r
+
+r:
+  - oldrel
+  - release
+  - devel
+
+before_install:
+  - export DISPLAY=:99.0
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
