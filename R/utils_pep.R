@@ -502,3 +502,30 @@ pep_plot_images = function(pep, n = 3){
 ################################################################################
 ################################################################################
 ################################################################################
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Retrieve the consensus sequence from a set of peptides
+#' @param pep A vector of peptides
+#' @return A string corresponding to the consensus sequence
+#' @examples
+#' pep_consensus(c("YMNSMQEML","FIYRHMFCV","VLFKFDMFI","KLLDRFPVA","RVLDDFTKL"))
+pep_consensus = function(pep){
+  get_max = function(x){
+    o = names(x)[which.max(x)]
+    if( length(o) > 1 ){
+      o = paste(o,collapse='')
+      o = paste0("[",o,"]")
+    }
+    return(names(x)[which.max(x)])
+  }
+  pep_check(pep = pep)
+  pep %>% pep_mat %>% apply(2,function(p_i){ p_i %>% table %>% return }) %>%
+    lapply(get_max) %>% unlist %>% paste(collapse = '') %>% return
+}
+################################################################################
+################################################################################
+################################################################################
