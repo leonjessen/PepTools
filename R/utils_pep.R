@@ -505,6 +505,8 @@ pep_plot_images = function(pep, n = 3){
 
 
 
+
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -525,6 +527,67 @@ pep_consensus = function(pep){
   pep_check(pep = pep)
   pep %>% pep_mat %>% apply(2,function(p_i){ p_i %>% table %>% return }) %>%
     lapply(get_max) %>% unlist %>% paste(collapse = '') %>% return
+}
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Encode a peptide
+#'
+#' Peptides are encoded using the BLOSUM62 matrix scaled to [0;1]
+#'
+#' Each position in the peptide become a vector of 20 values, corresponding to
+#' the rounded log odds ratio for substituting the amino acid in the peptide
+#' with each of the 20 standard proteogenic amino acids.
+#'
+#' The final result is a tibble with as many rows as input peptides and number
+#' columns equal to the number of positions in the input peptides times the
+#' number of BLOSUM62 substitions values (20) plus a column with the input
+#' peptides. For 100 9-mers this yields 100 rows and 181 columns
+#'
+#' @param pep A character vector of peptides to be encoded
+#' @return A tibble of encoded peptides
+#' @examples
+#' pep_encode_mat(pep_ran(k=9,n=100))
+#' dim(pep_encode_mat(pep_ran(k=9,n=100)))
+pep_encode_mat = function(pep){
+
+  # Check input
+  pep_check(pep)
+
+  # Get number of positions in peptide
+  n_pos = nchar(pep[1])
+
+  # Scale BLOSUM encoding matrix to [0;1]
+  bl62 = BLOSUM62 %>% mat_mima_scale %>% round(3)
+
+  # Convert input peptides to one long character vector of single amino acids
+  pep_str = pep %>% paste(collapse = '') %>% str_split('') %>% unlist
+
+  # Generate output matrix, such that each position in the peptide is encoded as
+  # a vector of 20 values corresponding to the values in the scaled BLOSUM62
+  # matrix. Each position is then concatenated forming a vector of a length of
+  # of number of positions in the peptides times the number of substitution
+  # values in the BLOSUM62 matrix, i.e. for a 9-mer this will be 9 x 20 = 180.
+  # The output matrix will then have dimensions 180 columns times number of input
+  # peptides rows and then an extra column when includeing the input peptides
+  # in the output. This way column names are:
+  # A_p1 R_p1 N_p1 D_p1 C_p1 Q_p1 E_p1 G_p1 H_p1 I_p1 L_p1 K_p1 M_p1 F_p1 P_p1
+  # S_p1  T_p1  W_p1  Y_p1  V_p1  A_p2 R_p2 N_p2 D_p2 C_p2 Q_p2 E_p2 G_p2 ...
+  out_mat = bl62[pep_str,] %>% t %>% as.vector %>%
+    matrix(ncol=n_pos * ncol(bl62), byrow = TRUE)
+  colnames(out_mat) = paste(colnames(BLOSUM62),
+                            paste0('p',rep(1:9,rep(20,9))),sep='_')
+  out_mat = out_mat %>% as_tibble
+  out_mat = as_tibble(pep) %>% bind_cols(out_mat) %>% rename(peptide=value)
+  return(out_mat)
 }
 ################################################################################
 ################################################################################
