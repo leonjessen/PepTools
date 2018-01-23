@@ -90,7 +90,12 @@ pssm_kld = function(PSSM){
       res = colnames(PSSM)[j]
       p   = PSSM[i,j]
       q   = BGFREQS[res]
-      kld_mat[i,j] = p * log2( p / q )
+      if( p > 0 ){
+        kld_mat[i,j] = p * log2( p / q )
+      } else {
+        kld_mat[i,j] = 0
+      }
+
     }
   }
   ic_kld = rowSums( kld_mat )
