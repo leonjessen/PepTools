@@ -40,3 +40,11 @@
 #' @format A named numeric matrix with 20 rows and 20 columns
 #' @source \url{https://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt}
 "BLOSUM62"
+
+#' The row normalised BLOSUM62 frequency matrix
+#'
+#' The BLock SUbstition matrix for sequences with less than 62\% similarity
+#'
+#' @format A named numeric matrix with 20 rows and 20 columns
+#' @source \url{http://www.cs.cornell.edu/courses/cs626/2003sp/blosum62qij.txt}
+"BLOSUM62_FREQ"
