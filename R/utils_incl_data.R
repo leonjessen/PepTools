@@ -83,3 +83,15 @@
   save(BGFREQS, file = "data/BGFREQS.RData")
   return(0)
 }
+# Download the blosum62 f-matrix and row scale it
+# https://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt
+# and save it into data/BLOSUM62.RData
+.get_blosum62_freq = function(){
+  bl62_url = 'http://www.cs.cornell.edu/courses/cs626/2003sp/blosum62qij.txt'
+  m = read_table(file = bl62_url, comment = '#') %>% as.matrix
+  rownames(m) = colnames(m)
+  m[upper.tri(m)] = m[lower.tri(m)]
+  BLOSUM62_FREQ = (m / rowSums(m)) %>% round(5)
+  save(BLOSUM62_FREQ, file = "data/BLOSUM62_FREQ.RData")
+  return(0)
+}
