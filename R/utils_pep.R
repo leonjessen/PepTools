@@ -345,6 +345,7 @@ pep_clean = function(pep){
 #' Encode a peptide
 #'
 #' Peptides are encoded using the BLOSUM62 matrix scaled to [0;1]
+#' (See the build in BLOSUM62 data matrix)
 #'
 #' Each position in the peptide become a vector of 20 values, corresponding to
 #' the rounded log odds ratio for substituting the amino acid in the peptide
@@ -542,6 +543,7 @@ pep_consensus = function(pep){
 #' Encode a peptide
 #'
 #' Peptides are encoded using the BLOSUM62 matrix scaled to [0;1]
+#' (See the build in BLOSUM62 data matrix)
 #'
 #' Each position in the peptide become a vector of 20 values, corresponding to
 #' the rounded log odds ratio for substituting the amino acid in the peptide
@@ -580,7 +582,7 @@ pep_encode_mat = function(pep){
   # peptides rows and then an extra column when includeing the input peptides
   # in the output. This way column names are:
   # A_p1 R_p1 N_p1 D_p1 C_p1 Q_p1 E_p1 G_p1 H_p1 I_p1 L_p1 K_p1 M_p1 F_p1 P_p1
-  # S_p1  T_p1  W_p1  Y_p1  V_p1  A_p2 R_p2 N_p2 D_p2 C_p2 Q_p2 E_p2 G_p2 ...
+  # S_p1 T_p1  W_p1  Y_p1  V_p1  A_p2 R_p2 N_p2 D_p2 C_p2 Q_p2 E_p2 G_p2 ...
   out_mat = bl62[pep_str,] %>% t %>% as.vector %>%
     matrix(ncol=n_pos * ncol(bl62), byrow = TRUE)
   colnames(out_mat) = paste(colnames(BLOSUM62),
@@ -588,6 +590,58 @@ pep_encode_mat = function(pep){
   out_mat = out_mat %>% as_tibble
   out_mat = as_tibble(pep) %>% bind_cols(out_mat) %>% rename(peptide=value)
   return(out_mat)
+}
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+#' Encode a peptide
+#'
+#' Peptides are encoded using the row normalised BLOSUM62 freq matrix
+#' (See the build in BLOSUM62_FREQ data matrix)
+#'
+#' Each position in the peptide become a vector of 20 values, corresponding to
+#' the rounded log odds ratio for substituting the amino acid in the peptide
+#' with each of the 20 standard proteogenic amino acids.
+#'
+#' The final result is a 3D array (tensor) of peptide 'images' with \code{n} rows, \code{k}
+#' columns and \code{20} slices, which is stored as a 3D array (tensor)
+#'
+#' @param pep A character vector of peptides to be encoded
+#' @return A 3D array (tensor) of peptide 'images'
+#' @examples
+#' pep_encode(pep_ran(k=9,n=10))
+#' dim(pep_encode(pep_ran(k=9,n=10)))
+pep_encode_freq = function(pep){
+
+  # Check input vector
+  pep_check(pep = pep)
+
+  # Then we convert the vector of peptides to a matrix
+  # with dimensions 'm x n' = 'n_peps x length_peps'
+  p_mat = pep %>% pep_mat
+
+  # Assign meaningful variable names to dimensions
+  n_peps = length(pep)         # i'th row
+  l_peps = nchar(pep[1])       # j'th column
+  l_enc  = ncol(BLOSUM62_FREQ) # k'th slice
+
+  # Finally we define our output tensor as a 3d array
+  # with dimensions n_peps x l_peps x l_enc (l_enc = 20)
+  o_tensor = array(data = NA, dim = c(n_peps,l_peps, l_enc))
+  for( i in 1:n_peps ){
+    pep_i_residues = p_mat[i,]
+    pep_img = BLOSUM62_FREQ[pep_i_residues,]
+    o_tensor[i,,]  = pep_img
+  }
+  return(o_tensor)
 }
 ################################################################################
 ################################################################################
