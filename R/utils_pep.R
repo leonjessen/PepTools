@@ -584,7 +584,7 @@ pep_encode_mat = function(pep){
   out_mat = bl62_prob[pep_str,] %>% t %>% as.vector %>%
     matrix(ncol=n_pos * ncol(bl62_prob), byrow = TRUE)
   colnames(out_mat) = paste(colnames(bl62_prob),
-                            paste0('p',rep(1:9,rep(20,9))),sep='_')
+                            paste0('p',rep(1:n_pos,rep(ncol(bl62_prob),n_pos))),sep='_')
   out_mat = out_mat %>% as_tibble
   out_mat = as_tibble(pep) %>% bind_cols(out_mat) %>% rename(peptide=value)
   return(out_mat)
