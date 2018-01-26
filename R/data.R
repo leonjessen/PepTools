@@ -41,10 +41,12 @@
 #' @source \url{https://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt}
 "BLOSUM62"
 
-#' The row normalised BLOSUM62 frequency matrix
+#' The row normalised BLOSUM62* frequency matrix
 #'
-#' The BLock SUbstition matrix for sequences with less than 62\% similarity
+#' *The BLock SUbstition matrix for sequences with less than 62\% similarity
+#'
+#' Rows are normalised such that sum(X_i) = 1 for all i in X (BLOSUM62)
 #'
 #' @format A named numeric matrix with 20 rows and 20 columns
 #' @source \url{http://www.cs.cornell.edu/courses/cs626/2003sp/blosum62qij.txt}
-"BLOSUM62_FREQ"
+"BLOSUM62_PROB"

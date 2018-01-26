@@ -13,8 +13,8 @@ pep_encode_mat(pep)
 A tibble of encoded peptides
 }
 \description{
-Peptides are encoded using the BLOSUM62 matrix scaled to [0;1]
-(See the build in BLOSUM62 data matrix)
+Peptides are encoded using the BLOSUM62 probability matrix
+(See BLOSUM62_PROB data matrix)
 }
 \details{
 Each position in the peptide become a vector of 20 values, corresponding to
