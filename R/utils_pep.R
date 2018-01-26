@@ -581,7 +581,7 @@ pep_encode_mat = function(pep){
   # in the output. This way column names are:
   # A_p1 R_p1 N_p1 D_p1 C_p1 Q_p1 E_p1 G_p1 H_p1 I_p1 L_p1 K_p1 M_p1 F_p1 P_p1
   # S_p1 T_p1  W_p1  Y_p1  V_p1  A_p2 R_p2 N_p2 D_p2 C_p2 Q_p2 E_p2 G_p2 ...
-  out_mat = bl62[pep_str,] %>% t %>% as.vector %>%
+  out_mat = bl62_prob[pep_str,] %>% t %>% as.vector %>%
     matrix(ncol=n_pos * ncol(bl62_prob), byrow = TRUE)
   colnames(out_mat) = paste(colnames(bl62_prob),
                             paste0('p',rep(1:9,rep(20,9))),sep='_')
