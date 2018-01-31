@@ -36,7 +36,7 @@ PEPTIDES %>% head(10)
     ##  [1] "YMNSMQEML" "FIYRHMFCV" "VLFKFDMFI" "KLLDRFPVA" "RVLDDFTKL"
     ##  [6] "ILKTDILLL" "GLQASIYRI" "AMHAWVFYL" "SMDFGFFEV" "ALPQFNPVV"
 
-and derive the count matrix:
+And derive the count matrix:
 
 ``` r
 PEPTIDES %>% pssm_counts %>% .[1:9,1:10]
