@@ -273,6 +273,12 @@ residue_name = function(res, to = 'one'){
          'one', 'three' or 'full'")
   }
 
+  # Check if only NAs were supplied
+  if( all(is.na(res)) ){
+    out = rep(NA,length(res))
+    return(out)
+  }
+
   # Format input
   # A bit tricky, but make sure, that the input is formatted to
   # first letter is uppercase and the following are lowercase
