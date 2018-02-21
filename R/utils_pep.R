@@ -274,16 +274,35 @@ residue_name = function(res, to = 'one'){
   }
 
   # Format input
+  # A bit tricky, but make sure, that the input is formatted to
+  # first letter is uppercase and the following are lowercase
   res  = res %>% tolower
   init = res %>% str_sub(start = 1, end = 1) %>% toupper
   res  = res %>% str_replace(pattern = "^\\w{1}", replacement = init)
   to   = to %>% tolower
 
+  # Set replacement for handling NA and X
+  r = 'A'
+  if( nchar(res[1]) == 3 ){
+    r = 'Ala'
+  }
+  if( nchar(res[1]) > 3 ){
+    r = 'Alanine'
+  }
+
   # Handle NAs
   nas_pos = c()
   if( any( is.na(res) ) ){
     nas_pos = which( is.na(res) )
-    res[nas_pos] = sample(res[!is.na(res)],1) # Replace NAs with random element
+    res[nas_pos] = r # Replace NAs
+  }
+
+  # Handle X
+  x_pos = c()
+  if( any( str_detect(res,'X') ) ){
+    x_pos = res %>% str_detect('X') %>% which
+    res[x_pos] = r # Replace X
+    nas_pos = c(nas_pos, x_pos) # Add x_pos to nas_pos to return NA for X
   }
 
   # Hardcode tibble of amino acid residue names
